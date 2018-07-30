@@ -40,12 +40,38 @@ def forward_backward_prop(X, labels, params, dimensions):
 
     # Note: compute cost based on `sum` not `mean`.
     ### YOUR CODE HERE: forward propagation
-    raise NotImplementedError
+    h1 = X.dot(W1) + b1
+    a1 = sigmoid(h1)
+    h2 =  a1.dot(W2) + b2
+    scores = softmax(h2)
+    cost = -np.sum(np.log(scores) * labels)
+
+    ### YOUR CODE HERE: backward propagation
+    grad_a2 = scores - labels
+
+    gradW2 = a1.T.dot(grad_a2)
+    gradb2 = np.sum(grad_a2,axis = 0)
+
+    grad_z1 = grad_a2.dot(W2.T)
+    grad_a1 = grad_z1 * sigmoid_grad(a1)
+
+    gradW1 = X.T.dot(grad_a1)
+    gradb1 = np.sum(grad_a1,axis =0)
     ### END YOUR CODE
 
     ### YOUR CODE HERE: backward propagation
-    raise NotImplementedError
-    ### END YOUR CODE
+    gradh2 = scores - labels
+
+    gradW2 = a1.T.dot(gradh2)
+    gradb2 = np.sum(gradh2, axis=0)
+
+    grada1 = gradh2.dot(W2.T)
+
+    gradh1 = grada1 * sigmoid_grad(a1)
+
+    gradW1 = X.T.dot(gradh1)
+    gradb1 = np.sum(gradh1, axis=0)
+
 
     ### Stack gradients (do not modify)
     grad = np.concatenate((gradW1.flatten(), gradb1.flatten(),
@@ -83,9 +109,7 @@ def your_sanity_checks():
     your additional tests be graded.
     """
     print "Running your sanity checks..."
-    ### YOUR CODE HERE
-    raise NotImplementedError
-    ### END YOUR CODE
+    pass
 
 
 if __name__ == "__main__":

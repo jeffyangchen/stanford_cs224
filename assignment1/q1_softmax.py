@@ -32,11 +32,11 @@ def softmax(x):
         # Matrix
         transformed = x - np.max(x,axis = 1)[:,np.newaxis]
         exponents = np.exp(transformed)
-        x = exponents / (np.sum(exponents,axis = 1))
+        x = exponents / (np.sum(exponents,keepdims= True,axis = 1))
     else:
         # Vector
         exponents = np.exp(x - np.max(x))
-        x = exponents / (np.sum(exponents))
+        x = exponents / (np.sum(exponents,keepdims = True))
 
     assert x.shape == orig_shape
     return x
