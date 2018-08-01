@@ -15,7 +15,7 @@ def normalizeRows(x):
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    x =  x / np.linalg.norm(x,axis = 1,keepdims = True)
     ### END YOUR CODE
 
     return x
@@ -58,7 +58,14 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     """
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    scores = softmax(predicted.dot(outputVectors.T))
+    cost = -np.log(scores[target])
+
+    grad_scores = scores
+    grad_scores[target] -= 1
+    gradPred = grad_scores.dot(outputVectors)
+    grad = predicted.T.dot(grad_scores)
+
     ### END YOUR CODE
 
     return cost, gradPred, grad
