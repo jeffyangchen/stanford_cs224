@@ -64,8 +64,10 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     grad_scores = scores
     grad_scores[target] -= 1
     gradPred = grad_scores.dot(outputVectors)
-    grad = predicted.T.dot(grad_scores)
-
+    # grad = predicted.T.dot(grad_scores)
+    Adebug = predicted[:,np.newaxis]
+    Bdebug = grad_scores[np.newaxis,:]
+    grad = (grad_scores[:,np.newaxis]).dot(predicted[np.newaxis,:])
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -103,18 +105,17 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     indices.extend(getNegativeSamples(target, dataset, K))
 
     ### YOUR CODE HERE
-    pred_measure = predicted.dot(outputVectors)
-    cost = - np.log(sigmoid(pred_measure[target])) - np.sum(np.log(sigmoid(-pred_measure[1:])))
+    products = predicted.dot(outputVectors.T)
+    cost = -np.log(sigmoid(products[target])) - np.sum(np.log(sigmoid(-products[indices[1:]])))
 
-
-    gradPred =  (sigmoid(pred_measure[target]) - 1) * outputVectors[target] - sum((sigmoid(-pred_measure[1::]) - 1) * outputVectors[indices[1:]])
+    sigmoid_sample = (1 - sigmoid(-products[indices[1:]]))
+    gradPred =  (sigmoid(products[target]) - 1) * outputVectors[target] + sum(sigmoid_sample[:,np.newaxis] * outputVectors[indices[1:]])
 
     grad = np.zeros_like(outputVectors)
 
-    grad[target] = sigmoid(pred_measure[target] - 1) * predicted
-
+    grad[target] = (sigmoid(products[target]) - 1) * predicted
     for k in indices[1:]:
-        grad[k] += (1 - sigmoid(-pred_measure[1::][k])) * predicted
+        grad[k] += (1.0 - sigmoid(-products[k])) * predicted
 
     ### END YOUR CODE
 
@@ -150,7 +151,15 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     gradOut = np.zeros(outputVectors.shape)
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    current_word = tokens[currentWord]
+
+    for word in contextWords:
+        context_word = tokens[word]
+        cost_add,gradPred_add,grad_add = word2vecCostAndGradient(inputVectors[current_word],context_word,outputVectors,dataset)
+
+        cost += cost_add
+        gradIn[current_word] += gradPred_add
+        gradOut += grad_add
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
@@ -174,7 +183,15 @@ def cbow(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     gradOut = np.zeros(outputVectors.shape)
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    target_index = tokens[currentWord]
+    context_words_sum = sum(inputVectors[tokens[words]] for words in contextWords)
+
+    cost,gradPred,gradOut = word2vecCostAndGradient(context_words_sum,target_index,outputVectors,dataset)
+
+
+    for words in contextWords:
+        gradIn[tokens[words]] += gradPred
+
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
@@ -209,27 +226,6 @@ def word2vec_sgd_wrapper(word2vecModel, tokens, wordVectors, dataset, C,
         grad[N/2:, :] += gout / batchsize / denom
 
     return cost, grad
-
-def sanity_check():
-    """
-    Set up fake data and parameters for the neural network, and test using
-    gradcheck.
-    """
-    print "Running sanity check..."
-
-    N = 20
-    dimensions = [10, 5, 10]
-    data = np.random.randn(N, dimensions[0])   # each row will be a datum
-    labels = np.zeros((N, dimensions[2]))
-    for i in xrange(N):
-        labels[i, random.randint(0,dimensions[2]-1)] = 1
-
-    params = np.random.randn((dimensions[0] + 1) * dimensions[1] + (
-        dimensions[1] + 1) * dimensions[2], )
-
-    gradcheck_naive(lambda params:
-        forward_backward_prop(data, labels, params, dimensions), params)
-
 
 
 def test_word2vec():
