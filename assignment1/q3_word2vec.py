@@ -103,7 +103,19 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     indices.extend(getNegativeSamples(target, dataset, K))
 
     ### YOUR CODE HERE
-    raise NotImplementedError
+    pred_measure = predicted.dot(outputVectors)
+    cost = - np.log(sigmoid(pred_measure[target])) - np.sum(np.log(sigmoid(-pred_measure[1:])))
+
+
+    gradPred =  (sigmoid(pred_measure[target]) - 1) * outputVectors[target] - sum((sigmoid(-pred_measure[1::]) - 1) * outputVectors[indices[1:]])
+
+    grad = np.zeros_like(outputVectors)
+
+    grad[target] = sigmoid(pred_measure[target] - 1) * predicted
+
+    for k in indices[1:]:
+        grad[k] += (1 - sigmoid(-pred_measure[1::][k])) * predicted
+
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -197,6 +209,27 @@ def word2vec_sgd_wrapper(word2vecModel, tokens, wordVectors, dataset, C,
         grad[N/2:, :] += gout / batchsize / denom
 
     return cost, grad
+
+def sanity_check():
+    """
+    Set up fake data and parameters for the neural network, and test using
+    gradcheck.
+    """
+    print "Running sanity check..."
+
+    N = 20
+    dimensions = [10, 5, 10]
+    data = np.random.randn(N, dimensions[0])   # each row will be a datum
+    labels = np.zeros((N, dimensions[2]))
+    for i in xrange(N):
+        labels[i, random.randint(0,dimensions[2]-1)] = 1
+
+    params = np.random.randn((dimensions[0] + 1) * dimensions[1] + (
+        dimensions[1] + 1) * dimensions[2], )
+
+    gradcheck_naive(lambda params:
+        forward_backward_prop(data, labels, params, dimensions), params)
+
 
 
 def test_word2vec():
