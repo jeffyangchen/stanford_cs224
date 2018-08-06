@@ -17,13 +17,16 @@ def softmax(x):
     Args:
         x:   tf.Tensor with shape (n_samples, n_features). Note feature vectors are
                   represented by row-vectors. (For simplicity, no need to handle 1-d
-                  input as in the previous homework)
+                  input as in the previous homework)e
     Returns:
         out: tf.Tensor with shape (n_sample, n_features). You need to construct this
                   tensor in this problem.
     """
 
     ### YOUR CODE HERE
+    reduced = x - tf.reduce_max(x)
+    exponents = tf.exp(reduced)
+    out = exponents / tf.reduce_sum(exponents,axis = 1, keepdims= True)
     ### END YOUR CODE
 
     return out
@@ -54,6 +57,8 @@ def cross_entropy_loss(y, yhat):
     """
 
     ### YOUR CODE HERE
+
+    out = -tf.reduce_sum(tf.to_float(y) * tf.log(yhat))
     ### END YOUR CODE
 
     return out
@@ -76,7 +81,7 @@ def test_softmax_basic():
             test2 = sess.run(test2)
     test_all_close("Softmax test 2", test2, np.array([[0.73105858, 0.26894142]]))
 
-    print "Basic (non-exhaustive) softmax tests pass\n"
+    print("Basic (non-exhaustive) softmax tests pass\n")
 
 
 def test_cross_entropy_loss_basic():
@@ -93,7 +98,8 @@ def test_cross_entropy_loss_basic():
     expected = -3 * np.log(.5)
     test_all_close("Cross-entropy test 1", test1, expected)
 
-    print "Basic (non-exhaustive) cross-entropy tests pass"
+    print("Basic (non-exhaustive) cross-entropy tests pass")
+
 
 if __name__ == "__main__":
     test_softmax_basic()
